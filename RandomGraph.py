@@ -20,6 +20,11 @@ class Random_Graph(object):
         
         self.generate_random_graph(self.n, self.p)
         
+        self.node_fail_prob = []
+        self.node_fail_sequence = []
+        
+        self.node_fail_final = []
+        
     def generate_random_graph(self, node_num, edge_prob):
         """Generate the undirected random graph based on the number of nodes and edge probability
         Monte Carlo Simulation on each node pair
@@ -86,33 +91,27 @@ class Random_Graph(object):
         
         self.node_fail_sequence.append(node_fail_sequence)
     
-    def generate_initial_failure(self, num):
+    def generate_initial_failure(self, num, seed):
         """Generate the initial node failure sceneria
         Input: the number of initial failure nodes
         output: the initial failure sequence
         """
         
         initial_node_failure = np.zeros(self.n)
+        np.random.seed(seed)
         temp = np.random.randint(self.n, size = num)
         initial_node_failure[temp] = 1
         self.node_fail_sequence.append(initial_node_failure)
         self.node_fail_final.append(initial_node_failure)
         
         
-    def failure_simulation(self, num, probability):
+    def failure_simulation(self, probability):
         """Simulate the node failure sequence along the time
         Input: Initial node failure sceneria
         Output: Node failure sequence, node failure probability
         """
         
-        self.node_fail_prob = []
-        self.node_fail_sequence = []
-        
-        self.node_fail_final = []
-        
-        
         self.edge_fail_matrix = self.edge_failure_matrix(probability)
-        self.generate_initial_failure(num)
         
         while(1):
             self.failure_probability()
