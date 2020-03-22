@@ -98,7 +98,7 @@ class Random_Graph(object):
         """
         
         initial_node_failure = np.zeros(self.n)
-        np.random.seed(seed)
+#        np.random.seed(seed)
         temp = np.random.randint(self.n, size = num)
         initial_node_failure[temp] = 1
         self.node_fail_sequence.append(initial_node_failure)
@@ -125,6 +125,43 @@ class Random_Graph(object):
             
             if((self.node_fail_final[-1] == self.node_fail_final[-2]).all() or (np.sum(self.node_fail_final[-1]) == self.n)):
                 break
+            
+    def visual_graph(self, sd):
+        """Visualize the graph using networkx package
+        """
+        import networkx as nx
+        
+        self.G = nx.convert_matrix.from_numpy_matrix(self.adj_matrix)
+        nx.draw(self.G, nx.random_layout(self.G, seed = sd))
+        
+    def visual_failure_process(self, sd, color1, color2):
+        """Visualize the failure process of the graph
+        """
+        import networkx as nx
+        
+        plt.figure(figsize = (5, 5))
+        self.visual_graph(sd)
+        
+        time_step = len(self.node_fail_final)
+        for i in range(time_step):
+            color = []
+            sequence = self.node_fail_final[i]
+            for j in range(self.n):
+                if(sequence[j] == 0):
+                    color.append(color1)
+                else:
+                    color.append(color2)
+            plt.figure(figsize = (5, 5))
+            nx.draw(self.G, nx.random_layout(self.G, seed = sd),with_labels = True, node_color = color, node_size = 600, font_color='white', font_size = 15)
+        
+        
+        
+        
+        
+        
+        
+        
+        
         
         
         

@@ -63,12 +63,14 @@ def posterior(prior, likelihood, num, itemnum):
     
 ##Generate vertice failure sequence data
 fail_seq_data = []
-num = 100
+num = 5
+color1 = ['red', 'orange', 'orange', 'tomato', 'purple']
+color2 = ['green', 'blue', 'purple', 'teal', 'royalblue']
 
 node_num = 50
 edge_prob = 0.08
 initial_fail_num = 2
-fail_prob = 0.2
+fail_prob = 0.3
 seed = 1
 
 itemnum = int(node_num*(node_num - 1)/2 + 1)
@@ -89,7 +91,7 @@ for i in range(num):
     random_graph.failure_simulation(fail_prob)
     
     fail_seq_data.append(random_graph.node_fail_sequence)
-
+    random_graph.visual_failure_process(1, color1[i], color2[i])
 
 ##Prior probability
 prior = normalize(np.ones(len(adj_matrix)))
