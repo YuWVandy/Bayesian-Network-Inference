@@ -60,17 +60,25 @@ def posterior(prior, likelihood, num, itemnum):
     
     return posterior
 
+def adj_graph(adj_matrix, c):
+    """set up the graph object from adj_matrix based using networkx package
+    """
+    import networkx as nx
+        
+    G = nx.convert_matrix.from_numpy_matrix(adj_matrix)
+    nx.draw(G, nx.random_layout(G), with_labels = True, node_color = c, node_size = 600, font_color='white', font_size = 15)
+
     
 ##Generate vertice failure sequence data
 fail_seq_data = []
-num = 5
+num = 100
 color1 = ['red', 'orange', 'orange', 'tomato', 'purple']
 color2 = ['green', 'blue', 'purple', 'teal', 'royalblue']
 
 node_num = 50
 edge_prob = 0.08
-initial_fail_num = 2
-fail_prob = 0.3
+#initial_fail_num = 10
+#fail_prob = 0.5
 seed = 1
 
 itemnum = int(node_num*(node_num - 1)/2 + 1)
@@ -86,12 +94,14 @@ for i in range(node_num):
 
 for i in range(num):
     random_graph = Random_Graph(node_num, edge_prob)
+    initial_fail_num = np.random.randint(10)
+#    fail_prob = 0.5*np.random.rand()
     random_graph.generate_initial_failure(initial_fail_num, seed)
     random_graph.adj_matrix = adj_matrix[300]
     random_graph.failure_simulation(fail_prob)
     
     fail_seq_data.append(random_graph.node_fail_sequence)
-    random_graph.visual_failure_process(1, color1[i], color2[i])
+#    random_graph.visual_failure_process(1, color1[i], color2[i])
 
 ##Prior probability
 prior = normalize(np.ones(len(adj_matrix)))
