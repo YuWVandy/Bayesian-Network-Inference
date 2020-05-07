@@ -25,7 +25,6 @@ def likelihood(num, itemnum, data, adj_matrix, fail_prob):
     for i in range(num):
         for j in range(itemnum):
             likelihood[i, j] = model(data[i], adj_matrix[j], fail_prob)
-            print(i, j)
     
     return likelihood
 
@@ -68,10 +67,26 @@ def adj_graph(adj_matrix, c):
     G = nx.convert_matrix.from_numpy_matrix(adj_matrix)
     nx.draw(G, nx.random_layout(G), with_labels = True, node_color = c, node_size = 600, font_color='white', font_size = 15)
 
+def posterior_similarity(obj_adj_matrix, adj_matrix, posterior):
+    """Calculate the posterial similarity based on equation in that paper
+    """
+    
+    post_similar = []
+    for i in range(len(posterior)):
+        temp = 0
+        for j in range(len(obj_adj_matrix)):
+            for k in range(len(obj_adj_matrix[j])):
+                temp += obj_adj_matrix[j, k]
+                for l in range(len(adj_matrix)):
+                    temp += - posterior[i, l]*adj_matrix[l][j, k]
+        
+        post_similar.append(1 - np.abs(temp/len(obj_adj_matrix)**2))
+
+    return post_similar  
     
 ##Generate vertice failure sequence data
-fail_seq_data = []
-num = 100
+
+num = 10
 color1 = ['red', 'orange', 'orange', 'tomato', 'purple']
 color2 = ['green', 'blue', 'purple', 'teal', 'royalblue']
 
@@ -80,8 +95,8 @@ edge_prob = 0.08
 #initial_fail_num = 10
 #fail_prob = 0.5
 seed = 1
-
 itemnum = int(node_num*(node_num - 1)/2 + 1)
+
 
 ##Generate n*(n-1)/2 graphs
 adj_matrix = [np.zeros([node_num, node_num])]
@@ -92,18 +107,95 @@ for i in range(node_num):
         temp[j, i] = 1
         adj_matrix.append(temp)
 
-for i in range(num):
-    random_graph = Random_Graph(node_num, edge_prob)
-    initial_fail_num = np.random.randint(10)
-#    fail_prob = 0.5*np.random.rand()
-    random_graph.generate_initial_failure(initial_fail_num, seed)
-    random_graph.adj_matrix = adj_matrix[300]
-    random_graph.failure_simulation(fail_prob)
-    
-    fail_seq_data.append(random_graph.node_fail_sequence)
-#    random_graph.visual_failure_process(1, color1[i], color2[i])
+adj_num = 100
+likearray = np.zeros([len(adj_num), num, itemnum])
+postarray = np.zeros([len(adj_num), num+1, itemnum])
+post_similarityarray = np.zeros([len(adj_num), num + 1])
 
-##Prior probability
-prior = normalize(np.ones(len(adj_matrix)))
-like = likelihood(num, itemnum, fail_seq_data, adj_matrix, fail_prob)
-post_prob = posterior(prior, like, num, itemnum)
+#for j in range(len(adj_num)):
+    fail_seq_data = []
+#    print(adj_num[j])
+    for i in range(num):
+        random_graph = Random_Graph(node_num, edge_prob)
+        initial_fail_num = np.random.randint(20)
+        fail_prob = 0.2*np.random.rand()
+        random_graph.generate_initial_failure(initial_fail_num, seed)
+        random_graph.adj_matrix = adj_matrix[adj_num]
+        random_graph.failure_simulation(fail_prob)
+        
+        fail_seq_data.append(random_graph.node_fail_sequence)
+    #    random_graph.visual_failure_process(1, color1[i], color2[i])
+    
+    ##Prior probability
+    prior = normalize(np.ones(len(adj_matrix)))
+    like = likelihood(num, itemnum, fail_seq_data, adj_matrix, fail_prob)
+    post_prob = posterior(prior, like, num, itemnum)
+    post_similarity = posterior_similarity(adj_matrix[adj_num[j]], adj_matrix, post_prob)
+    likearray[j, :, :] = like
+    postarray[j, :, :] = post_prob
+    post_similarityarray[j, :] = post_similarity
+    
+
+
+plt.plot(np.arange(1, itemnum+1, 1), post_prob[0], label = '0 - fs')
+plt.plot(np.arange(1, itemnum+1, 1), post_prob[1], label = '1 - fs')
+plt.plot(np.arange(1, itemnum+1, 1), post_prob[2], label = '2 - fs')
+plt.plot(np.arange(1, itemnum+1, 1), post_prob[3], label = '3 - fs')
+plt.plot(np.arange(1, itemnum+1, 1), post_prob[4], label = '4 - fs')
+plt.plot(np.arange(1, itemnum+1, 1), post_prob[5], label = '5 - fs')
+plt.plot(np.arange(1, itemnum+1, 1), post_prob[10], label = '10 - fs')
+plt.plot(np.arange(1, itemnum+1, 1), post_prob[30], label = '30 - fs')
+plt.plot(np.arange(1, itemnum+1, 1), post_prob[50], label = '50 - fs')
+plt.xlabel('Graph number')
+plt.ylabel('Probability')
+plt.grid(True)
+plt.legend(bbox_to_anchor=(1, 1), loc='upper left', ncol=1, frameon = 0)
+
+lower = 0
+upper = 250+1
+plt.plot(np.arange(lower, upper, 1), post_prob[0][lower:upper], label = '0 - fs')
+plt.plot(np.arange(lower, upper, 1), post_prob[1][lower:upper], label = '1 - fs')
+plt.plot(np.arange(lower, upper, 1), post_prob[2][lower:upper], label = '2 - fs')
+plt.plot(np.arange(lower, upper, 1), post_prob[3][lower:upper], label = '3 - fs')
+plt.plot(np.arange(lower, upper, 1), post_prob[4][lower:upper], label = '4 - fs')
+plt.plot(np.arange(lower, upper, 1), post_prob[5][lower:upper], label = '5 - fs')
+plt.plot(np.arange(lower, upper, 1), post_prob[10][lower:upper], label = '10 - fs')
+plt.plot(np.arange(lower, upper, 1), post_prob[30][lower:upper], label = '30 - fs')
+plt.plot(np.arange(lower, upper, 1), post_prob[50][lower:upper], label = '50 - fs')
+plt.xlabel('Graph number')
+plt.ylabel('Probability')
+plt.grid(True)
+plt.legend(bbox_to_anchor=(1, 1), loc='upper left', ncol=1, frameon = 0)
+
+#Calculate the posterial similarity
+
+plt.scatter(np.arange(0, num+1, 1), post_similarity)
+
+for i in range(len(post_similarityarray)):
+    for j in range(len(post_similarityarray[i])):
+        if(post_similarityarray[i, j] > 1):
+            post_similarityarray[i, j] = 2 - post_similarityarray[i, j]
+            
+
+plt.figure(figsize = (10, 7))
+for i in np.arange(0, len(post_similarityarray), 10):
+    plt.plot(np.arange(0, num+1, 1), post_similarityarray[i], label = '{} graph'.format(i*10))
+plt.xlabel('The number of data set')
+plt.ylabel('Posterior Similarity')
+plt.grid(True)
+plt.legend(bbox_to_anchor=(1, 1), loc='upper left', ncol=1, frameon = 0)
+
+#graph_num = 70
+#plt.plot(np.arange(1, itemnum+1, 1), postarray[graph_num][0], label = '0 - fs')
+#plt.plot(np.arange(1, itemnum+1, 1), postarray[graph_num][1], label = '1 - fs')
+#plt.plot(np.arange(1, itemnum+1, 1), postarray[graph_num][2], label = '2 - fs')
+#plt.plot(np.arange(1, itemnum+1, 1), postarray[graph_num][3], label = '3 - fs')
+#plt.plot(np.arange(1, itemnum+1, 1), postarray[graph_num][4], label = '4 - fs')
+#plt.plot(np.arange(1, itemnum+1, 1), postarray[graph_num][5], label = '5 - fs')
+#plt.plot(np.arange(1, itemnum+1, 1), postarray[graph_num][10], label = '10 - fs')
+#plt.plot(np.arange(1, itemnum+1, 1), postarray[graph_num][30], label = '30 - fs')
+#plt.xlabel('Graph number')
+#plt.ylabel('Probability')
+#plt.grid(True)
+#plt.legend(bbox_to_anchor=(1, 1), loc='upper left', ncol=1, frameon = 0)
+    
