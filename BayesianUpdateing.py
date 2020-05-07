@@ -25,7 +25,7 @@ def likelihood(num, itemnum, data, adj_matrix, fail_prob):
     for i in range(num):
         for j in range(itemnum):
             likelihood[i, j] = model(data[i], adj_matrix[j], fail_prob)
-    
+            print(i, j)
     return likelihood
 
 def model(data, adj_matrix, fail_prob):
@@ -40,8 +40,10 @@ def model(data, adj_matrix, fail_prob):
             m = 0
             for k in range(len(adj_matrix)):
                 m += adj_matrix[k, j]*np.log(1 - fail_prob)*fail1[k]
-            temp = (((1 - np.exp(m))**fail2[j])*(np.exp(m)**(1 - fail2[j])))**(1 - fail1[j])
             
+            temp = (((1 - np.exp(m))**fail2[j])*(np.exp(m)**(1 - fail2[j])))**(1 - fail1[j])
+            if(temp == 0):
+                temp = 1 - np.exp(m)
             prob = prob*temp
     
     return prob
@@ -86,12 +88,12 @@ def posterior_similarity(obj_adj_matrix, adj_matrix, posterior):
     
 ##Generate vertice failure sequence data
 
-num = 10
+num = 5
 color1 = ['red', 'orange', 'orange', 'tomato', 'purple']
 color2 = ['green', 'blue', 'purple', 'teal', 'royalblue']
 
 node_num = 50
-edge_prob = 0.08
+edge_prob = 0.2
 #initial_fail_num = 10
 #fail_prob = 0.5
 seed = 1
@@ -107,33 +109,34 @@ for i in range(node_num):
         temp[j, i] = 1
         adj_matrix.append(temp)
 
-adj_num = 100
-likearray = np.zeros([len(adj_num), num, itemnum])
-postarray = np.zeros([len(adj_num), num+1, itemnum])
-post_similarityarray = np.zeros([len(adj_num), num + 1])
+adj_num = 300
+likearray = np.zeros([adj_num, num, itemnum])
+postarray = np.zeros([adj_num, num+1, itemnum])
+post_similarityarray = np.zeros([adj_num, num + 1])
 
 #for j in range(len(adj_num)):
-    fail_seq_data = []
+fail_seq_data = []
 #    print(adj_num[j])
-    for i in range(num):
-        random_graph = Random_Graph(node_num, edge_prob)
-        initial_fail_num = np.random.randint(20)
-        fail_prob = 0.2*np.random.rand()
-        random_graph.generate_initial_failure(initial_fail_num, seed)
-        random_graph.adj_matrix = adj_matrix[adj_num]
-        random_graph.failure_simulation(fail_prob)
-        
-        fail_seq_data.append(random_graph.node_fail_sequence)
-    #    random_graph.visual_failure_process(1, color1[i], color2[i])
+for i in range(num):
+    random_graph = Random_Graph(node_num, edge_prob)
+    initial_fail_num = np.random.randint(20)
+#    fail_prob = 0.2
+    fail_prob = 0.2*np.random.rand()
+    random_graph.generate_initial_failure(initial_fail_num, seed)
+    random_graph.adj_matrix = adj_matrix[adj_num]
+    random_graph.failure_simulation(fail_prob)
     
-    ##Prior probability
-    prior = normalize(np.ones(len(adj_matrix)))
-    like = likelihood(num, itemnum, fail_seq_data, adj_matrix, fail_prob)
-    post_prob = posterior(prior, like, num, itemnum)
-    post_similarity = posterior_similarity(adj_matrix[adj_num[j]], adj_matrix, post_prob)
-    likearray[j, :, :] = like
-    postarray[j, :, :] = post_prob
-    post_similarityarray[j, :] = post_similarity
+    fail_seq_data.append(random_graph.node_fail_sequence)
+#    random_graph.visual_failure_process(1, color1[i], color2[i])
+
+##Prior probability
+prior = normalize(np.ones(len(adj_matrix)))
+like = likelihood(num, itemnum, fail_seq_data, adj_matrix, fail_prob)
+post_prob = posterior(prior, like, num, itemnum)
+post_similarity = posterior_similarity(adj_matrix[adj_num[j]], adj_matrix, post_prob)
+likearray[j, :, :] = like
+postarray[j, :, :] = post_prob
+post_similarityarray[j, :] = post_similarity
     
 
 
